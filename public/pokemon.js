@@ -34,8 +34,8 @@ var pokemon = {
                                 <template v-slot:default >
                                     <tbody>
                                         <tr >
-                                        <td>HP</td>
-                                        <td>{{ pokem.base.HP }}</td>
+                                        <td>Age</td>
+                                        <td>{{ pokem.base.Age }}</td>
                                         </tr>
                                         <tr >
                                         <td>Attack</td>

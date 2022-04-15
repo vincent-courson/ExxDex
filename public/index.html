@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="uft-8"/>
+        <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <title>Pokedex</title>
+    </head>
+    <body>
+        <div id="app">
+            <v-app>
+                <v-col :class="'grey '+((!darkMode)?'lighten-2':'darken-2')">
+                        <v-container class="flex flex-wrap flex-height fill-column justify-space-between" :class="'ma-0 pa-0 grey '+((!darkMode)?'lighten-2':'darken-2')">
+                            <v-row class="justify-space-between">
+                                <v-select name="choixtype" v-model="newtype" label="Types" :items="types" v-on:change="Typeschange()">
+                                </v-select>
+                                <v-switch v-model="darkMode" :label="'dark mode:'+ darkMode.toString()" color="darken-2"></v-switch>
+                            </v-row> 
+                        </v-container>
+                    <v-row>
+                        <v-container fluid class="ma-0 pa-0 d-flex flex-wrap justify-space-around">
+                            <div v-for ="poke in pokemonsAffiches" :key= "poke.id" class="col-lg-4 col-md-6 col-sm-12 col-xs-12 ">
+                                <poke-mon :pokem="poke" :dark="darkMode"></poke-mon>
+                            </div>
+                        </v-container>
+                    </v-row>
+                <v-pagination @input="majPage" v-model="page" :length="nbPages" circle></v-pagination>
+                </v-col>
+                
+                
+            </v-app>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script src="./pokemon.js"></script>
+        <script language="javascript">
+			new Vue({
+				el: '#app',
+                components:{
+                    'poke-mon':pokemon
+                },
+                vuetify: new Vuetify(),
+				data:{
+                    count: 0,
+                    pokemons:[],
+                    types:[],
+                    pokemonsAffiches:[],
+                    newtype: "Tous",
+                    darkMode: false,
+                    page:1,
+                    nbPages:1,
+                    nbparpage:12,
+                },    
+                created: function(){
+                this.getPokemons();
+                this.getTypes();      
+                },  
+                methods:{
+                    getTypes:function(){
+                        let self = this;
+                        axios.get('/types').then(function(reponse){
+                            if (reponse.data.status=="OK")
+                            {
+                                 self.types = reponse.data.types;
+                                 self.types.unshift("Tous")
+                            }
+
+                        });
+                    },
+                    getPokemons:function(){
+                        let self =this;
+                        axios.get('/pokemons/all').then(function(reponse){
+                            if(reponse.data.status=="OK")
+                            {
+                                self.pokemons = reponse.data.pokemon;
+                            }
+                            self.nbPages =parseInt(self.pokemons.length/self.nbparpage)+1;
+                            self.majPage();
+                        }); 
+                    },
+                    Typeschange:function(){
+                        let self = this;
+                        self.page=1;
+                        let sent=self.newtype;
+                        if (sent=="Tous") sent='all';
+                        axios.get('/pokemons/'+sent).then(function(reponse){
+                            if (reponse.data.status=="OK")
+                            {
+                                self.pokemons = reponse.data.pokemon;
+                            }
+                            self.nbPages =parseInt(self.pokemons.length/self.nbparpage)+1;
+                            self.majPage();
+                        });
+                    },
+                    majPage:function(){
+                        let self = this;
+                        self.pokemonsAffiches=[];
+                        if (self.page==self.nbPages)
+                        {
+                            let nbrest =parseInt(self.pokemons.length-((self.page-1)*self.nbparpage))
+                            for (let i=0;i<nbrest;i++)
+                            {
+                                self.pokemonsAffiches.push(self.pokemons[(self.page-1)*12+i]);
+                            }
+                        }
+                        else
+                        {
+                           for (let i=0;i<12;i++)
+                            {
+                                self.pokemonsAffiches.push(self.pokemons[(self.page-1)*12+i]);
+                            } 
+                        }
+                    }
+                }                             
+			});
+		</script>
+    </body>
+</html>
